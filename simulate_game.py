@@ -107,20 +107,49 @@ class Game:
         if result in ['PU', 'SO']:
             self.outs += 1
         if result == 'GB':
+            self.outs += 1
             # double-play logic
-            if self.outs < 2:
-                if self.runners[1]:
-                    speed = batter.Speed[0]
+            if self.outs < 3 and self.runners[1]:
+                roll = randint(1,20)
+                if home_team_up:
+                    fielding = self.home_defense['IF']
+                else:
+                    fielding = self.away_defense['IF']
+
+                fielding_check = roll + fielding
+
+                if fielding_check > batter.Speed:
+                    self.outs += 1
+
+            # runners advance
+            self.advance_runners(num_bases=1)
 
         
 
         if home_team_up:
             self.home_batter += 1
+            self.home_score += len(self.runners[4])
         else:
             self.away_batter += 1
+            self.away_score += len(self.runners[4])
+        
+        self.runners[4] = None
             
         #TODO finish this
         pass
+
+    def advance_runners(self, num_bases):
+        if self.outs < 3:
+            for _ in range(num_bases):
+                if self.runners[3]:
+                    self.runners[4].append(self.runners[3])
+                    self.runners[3] = None
+                if self.runners[2]:
+                    self.runners[3] = self.runners[2]
+                    self.runners[2] = None
+                if self.runners[1]:
+                    self.runners[2] = self.runners[1]
+                    self.runners1 = None
 
     def at_bat(self, pitcher_id, hitter_id):
         pitch = randint(1,20)
