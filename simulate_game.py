@@ -1,7 +1,7 @@
 from random import randint
 import pandas as pd
 
-### example lineups
+### example lineup
 # home_lineup = [[2912, 'LF-RF'],
 #                 [455, 'C'],
 #                 [695, 'LF-RF'],
@@ -11,6 +11,9 @@ import pandas as pd
 #                 [201, '1B'],
 #                 [1104, 'SS'],
 #                 [3807, 'CF']]
+
+### example pitching_dict
+home_pitching_dict = 
 
 class Game:
     def __init__(self, home_lineup, home_pitching_dict, away_lineup, away_pitching_dict):
@@ -102,7 +105,7 @@ class Game:
         Move runners, add scores, add outs, change batter
         """
 
-        result_cols = ['PU', 'SO', 'GB', 'FB', 'BB', 'Single', 'SinglePlus', 'Double', 'Triple', 'HR']
+        #TODO add ability to take extra bases on Single, SinglePlus, Double, and FB
 
         if result in ['PU', 'SO']:
             self.outs += 1
@@ -122,10 +125,40 @@ class Game:
                     self.outs += 1
 
             # runners advance
-            self.advance_runners(num_bases=1)
-
+            self.advance_runners()
+        if result == 'FB':
+            #TODO add tagging up logic
+            self.outs += 1
         
+        if result == 'BB':
+            self.advance_runners()
+            self.runners[1] = batter.ID
+        
+        if result == 'Single':
+            self.advance_runners()
+            self.runners[1] = batter.ID
+        
+        if result == 'SinglePlus':
+            self.advance_runners()
+            
+            if self.runners[2] == None:
+                self.runners[2] = batter.ID
+            else:
+                self.runners[1] = batter.ID
+        
+        if result == 'Double':
+            self.advance_runners(num_bases=2)
+            self.runners[2] = batter.ID
+        
+        if result == 'Triple':
+            self.advance_runners(num_bases=3)
+            self.runners[3] = batter.ID
+        
+        if result == 'HR':
+            self.advance_runners(num_bases=3)
+            self.runners[4].append(batter.ID)
 
+        # bookkeeping
         if home_team_up:
             self.home_batter += 1
             self.home_score += len(self.runners[4])
@@ -134,11 +167,8 @@ class Game:
             self.away_score += len(self.runners[4])
         
         self.runners[4] = None
-            
-        #TODO finish this
-        pass
 
-    def advance_runners(self, num_bases):
+    def advance_runners(self, num_bases=1):
         if self.outs < 3:
             for _ in range(num_bases):
                 if self.runners[3]:
@@ -151,12 +181,12 @@ class Game:
                     self.runners[2] = self.runners[1]
                     self.runners1 = None
 
-    def at_bat(self, pitcher_id, hitter_id):
+    def at_bat(self, pitcher_id, batter_id, home_team_up, verbose=False):
         pitch = randint(1,20)
         swing = randint(1,20)
 
-        pitcher = self.players.loc[self.players['ID'] == pitcher_id]
-        batter = self.players.loc[self.players['ID'] == batter_id]
+        pitcher = self.players.loc[self.players['ID'] == pitcher_id].iloc[0]
+        batter = self.players.loc[self.players['ID'] == batter_id].iloc[0]
 
         control = pitcher.Control[0]
         on_base = batter.OnBase[0]
@@ -165,19 +195,23 @@ class Game:
         if (control + pitch) > on_base:
             advantage_player_id = pitcher_id
         else:
-            advantage_player_id = hitter_id
+            advantage_player_id = batter_id
 
-        # TODO finish this
-        pass
+        result = self.lookup_result(swing, advantage_player_id)
+        self.apply_result(result, home_team_up, batter)
 
-        
-
-
-
-
-
+        if verbose:
+            print(result)
+            if runners[3]:
+                print(f'{runners[3]} on third')
+            if runners[2]:
+                print(f'{runners[2]} on second')
+            if runners[1]:
+                print(f'{runners[1]} on first')
     
-    def simulate_home_batting(self):
+    def simulate_home_batting(self, verbose=False):
+        while self.outs<3:
+            self.at_bat(self.home_lineup)
         
         pass
 
