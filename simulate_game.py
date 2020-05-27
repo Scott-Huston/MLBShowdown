@@ -142,7 +142,7 @@ class Game:
             self.advance_runners()
             if batter_to_first:
                 self.runners[1] = batter.ID
-                
+
         if result == 'FB':
             #TODO add tagging up logic
             self.outs += 1
@@ -242,11 +242,14 @@ class Game:
         if verbose:
             print(f'End top of inning number {self.inning}')
     
-    def simulate_home_batting(self, verbose=0):
+    def simulate_home_batting(self, verbose=0), walkoff_potential=False:
         pitcher_id = self.away_pitching_order[self.inning]
         while self.outs<3:
             batter_id = self.home_lineup[self.home_batter][0]
             self.at_bat(pitcher_id, batter_id, True,verbose)
+
+            if walkoff_potential and self.home_score>self.away_score:
+                break
 
         self.reset_inning()
 
@@ -267,18 +270,15 @@ class Game:
         self.simulate_away_batting(verbose=verbose)
         
         if not self.home_score > self.away_score:
-            # TODO fix so game ends immediately when winning run scores
-            self.simulate_home_batting(verbose=verbose)
+            self.simulate_home_batting(verbose=verbose, walkoff_potential=True)
 
         # TODO account for extra innings pitcher selection
         while self.home_score == self.away_score:
             self.simulate_away_batting(verbose=verbose)
 
             if not self.home_score > self.away_score:
-                # TODO fix so game ends immediately when winning run scores
-                self.simulate_home_batting(verbose=verbose)
+                self.simulate_home_batting(verbose=verbose, walkoff_potential=True)
         
-
         if self.home_score>self.away_score:
             winner = 'Home team'
         else:
